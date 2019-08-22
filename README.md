@@ -2,6 +2,10 @@
 Decrypt AES265 encrypted zip files with a word list. 
 
 ```
+go get "github.com/alexmullins/zip"
+```
+
+```
 C:\>go run ZipCrack.go -h
 
     ▒███████▒ ██▓ ██▓███   ▄████▄   ██▀███   ▄▄▄       ▄████▄   ██ ▄█▀

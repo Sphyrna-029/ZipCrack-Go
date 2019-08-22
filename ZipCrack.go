@@ -6,8 +6,9 @@ import (
     "os"
     "flag"
     "time"
+    "io/ioutil"
     "log"
-    "github.com/alexmullins/zip"
+    "github.com/yeka/zip"
 )
 
 func main() {
@@ -54,12 +55,17 @@ func main() {
 	    f.SetPassword(fscanner.Text())
             rc, err := f.Open()
             if err != nil {
-                continue
-            }
+		continue
+	    }
+	    buf, err := ioutil.ReadAll(rc)
+            if err != nil {
+		continue
+	    }
             rc.Close()
             r.Close()
-            elapsed := time.Since(start)
-            log.Printf("Found password: %s in %s", fscanner.Text(), elapsed)
+	    elapsed := time.Since(start)
+	    log.Printf("\nSize of %v: %v byte(s)\n", f.Name, len(buf))
+            log.Printf("============= Found password: %s in %s =============", fscanner.Text(), elapsed)
             os.Exit(0)
         }
     }

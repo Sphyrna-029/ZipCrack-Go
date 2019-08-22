@@ -6,37 +6,36 @@ import (
     "os"
     "flag"
     "time"
-	"log"
-	"sync"
+    "log"
+    "sync"
     "github.com/alexmullins/zip"
 )
 
 var wg sync.WaitGroup 
 
 func decrypt(zipFile string, password string, passChan chan string) {
-	r, err := zip.OpenReader(zipFile)
+    r, err := zip.OpenReader(zipFile)
     if err != nil {
         log.Fatal(err)
-	}
+    }
 	
     f := r.File 
-	f.SetPassword(password)
-	rc, err := f.Open()
+    f.SetPassword(password)
+    rc, err := f.Open()
     if err != nil {
         close(passChan)
-	}
+    }
 	//If solved clean up our files and send back password
-	passChan <- password
-	rc.Close()
+    passChan <- password
+    rc.Close()
     r.Close()
-	close(passChan)
-	
+    close(passChan)
 }
 
 func main() {
     start := time.Now()
 
-	//Parse cmd line arguments
+    //Parse cmd line arguments
     filePtr := flag.String("zip", "", "Path to zip file.")
     wordlistPtr := flag.String("wordlist", "", "Path to wordlist.")
     flag.Parse()
@@ -46,9 +45,9 @@ func main() {
     }
     if *wordlistPtr == "" {
         log.Fatal("Wordlist not found.")
-	}
+    }
 	
-	//Display art, info
+    //Display art, info
     banner := 
     `
     ▒███████▒ ██▓ ██▓███   ▄████▄   ██▀███   ▄▄▄       ▄████▄   ██ ▄█▀
@@ -63,24 +62,24 @@ func main() {
     ░                     ░                           ░      
     `
     fmt.Println(banner)
-	log.Printf("Contending %s against %s", *filePtr, *wordlistPtr)
+    log.Printf("Contending %s against %s", *filePtr, *wordlistPtr)
 	
     //Initialize channel for sending solved password back to the main thread
     passChan := make(chan string)
 
-	//Begin the main loop
+    //Begin the main loop
     file, _ := os.Open(*wordlistPtr)
     fscanner := bufio.NewScanner(file)
     for fscanner.Scan() {
-		go decrypt(*filePtr, fscanner.Text(), passChan)
+	go decrypt(*filePtr, fscanner.Text(), passChan)
 
-		passwd := <-passChan
+	passwd := <-passChan
 
-		if passwd != "" {
-			close(passChan)
-			elapsed := time.Since(start)
+	if passwd != "" {
+	    close(passChan)
+	    elapsed := time.Since(start)
             log.Printf("Found password: %s in %s", passwd, elapsed)
             os.Exit(0)
-		}
-        }
+	}
+    }
 } 

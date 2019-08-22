@@ -5,34 +5,38 @@ import (
     "fmt"
     "os"
     "flag"
-    "io/ioutil"
-    "log"
+	"io/ioutil"
+	"log"
+	"time"
     "github.com/yeka/zip"
 )
 
+var start = time.Now()
+
 func decrypt(zipFile string, password string) {
-    r, err := zip.OpenReader(zipFile)
+	r, err := zip.OpenReader(zipFile)
     if err != nil {
         log.Fatal(err)
     }
-    defer r.Close()
+	defer r.Close()
 	
     for _, f := range r.File {
-	f.SetPassword(password)
-	rc, err := f.Open()
-	if err != nil {
-	    continue
+		f.SetPassword(password)
+		rc, err := f.Open()
+		if err != nil {
+			continue
+		}
+		buf, err := ioutil.ReadAll(rc)
+		if err != nil {
+			continue
+		}
+		rc.Close()
+		r.Close()
+		elapsed := time.Since(start)
+		log.Printf("Size of %v: %v byte(s)\n", f.Name, len(buf))
+		log.Printf("!============= Found password: %s in %s =============!", password, elapsed)
+		os.Exit(0)
 	}
-	buf, err := ioutil.ReadAll(rc)
-	if err != nil {
-	    continue
-	}
-	rc.Close()
-	r.Close()
-	log.Printf("\nSize of %v: %v byte(s)\n", f.Name, len(buf))
-	log.Printf("============= Found password: %s =============", password)
-	os.Exit(0)
-    }
 }
 
 func main() {
@@ -69,5 +73,5 @@ func main() {
     fscanner := bufio.NewScanner(file)
     for fscanner.Scan() {
         go decrypt(*filePtr, fscanner.Text())
-    }
+	}
 } 

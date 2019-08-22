@@ -4,13 +4,14 @@ import (
     "bufio"
     "fmt"
     "os"
-    //"io"
+    "flag"
     "time"
     "log"
     "github.com/alexmullins/zip"
 )
 
 func main() {
+
     start := time.Now()
 
     banner := 
@@ -28,15 +29,25 @@ func main() {
     `
     fmt.Println(banner)
 
+    filePtr := flag.String("zip", "", "Path to zip file.")
+    wordlistPtr := flag.String("wordlist", "", "Path to wordlist.")
+    flag.Parse()
 
-    fmt.Println("\nContending secretdata.zip against wordlist.txt")
-    r, err := zip.OpenReader("secretdata.zip")
+    if *filePtr == "" {
+        log.Fatal("Zip file not found.")
+    }
+    if *wordlistPtr == "" {
+        log.Fatal("Wordlist not found.")
+    }
+
+    log.Printf("Contending %s against %s", *filePtr, *wordlistPtr)
+    r, err := zip.OpenReader(*filePtr)
     if err != nil {
         log.Fatal(err)
     }
     defer r.Close()
 
-    file, _ := os.Open("wordlist.txt")
+    file, _ := os.Open(*wordlistPtr)
     fscanner := bufio.NewScanner(file)
     for fscanner.Scan() {
         for _, f := range r.File {

@@ -6,14 +6,49 @@ import (
     "os"
     "flag"
     "time"
-    "log"
+	"log"
+	"sync"
     "github.com/alexmullins/zip"
 )
 
-func main() {
+var wg sync.WaitGroup 
 
+func decrypt(zipFile string, password string, passChan chan string) {
+	r, err := zip.OpenReader(zipFile)
+    if err != nil {
+        log.Fatal(err)
+	}
+	
+    f := r.File 
+	f.SetPassword(password)
+	rc, err := f.Open()
+    if err != nil {
+        close(passChan)
+	}
+	//If solved clean up our files and send back password
+	passChan <- password
+	rc.Close()
+    r.Close()
+	close(passChan)
+	
+}
+
+func main() {
     start := time.Now()
 
+	//Parse cmd line arguments
+    filePtr := flag.String("zip", "", "Path to zip file.")
+    wordlistPtr := flag.String("wordlist", "", "Path to wordlist.")
+    flag.Parse()
+
+    if *filePtr == "" {
+        log.Fatal("Zip file not found.")
+    }
+    if *wordlistPtr == "" {
+        log.Fatal("Wordlist not found.")
+	}
+	
+	//Display art, info
     banner := 
     `
     ▒███████▒ ██▓ ██▓███   ▄████▄   ██▀███   ▄▄▄       ▄████▄   ██ ▄█▀
@@ -28,39 +63,24 @@ func main() {
     ░                     ░                           ░      
     `
     fmt.Println(banner)
+	log.Printf("Contending %s against %s", *filePtr, *wordlistPtr)
+	
+    //Initialize channel for sending solved password back to the main thread
+    passChan := make(chan string)
 
-    filePtr := flag.String("zip", "", "Path to zip file.")
-    wordlistPtr := flag.String("wordlist", "", "Path to wordlist.")
-    flag.Parse()
-
-    if *filePtr == "" {
-        log.Fatal("Zip file not found.")
-    }
-    if *wordlistPtr == "" {
-        log.Fatal("Wordlist not found.")
-    }
-
-    log.Printf("Contending %s against %s", *filePtr, *wordlistPtr)
-    r, err := zip.OpenReader(*filePtr)
-    if err != nil {
-        log.Fatal(err)
-    }
-    defer r.Close()
-
+	//Begin the main loop
     file, _ := os.Open(*wordlistPtr)
     fscanner := bufio.NewScanner(file)
     for fscanner.Scan() {
-        for _, f := range r.File {
-	    f.SetPassword(fscanner.Text())
-            rc, err := f.Open()
-            if err != nil {
-                continue
-            }
-            rc.Close()
-            r.Close()
-            elapsed := time.Since(start)
-            log.Printf("Found password: %s in %s", fscanner.Text(), elapsed)
+		go decrypt(*filePtr, fscanner.Text(), passChan)
+
+		passwd := <-passChan
+
+		if passwd != "" {
+			close(passChan)
+			elapsed := time.Since(start)
+            log.Printf("Found password: %s in %s", passwd, elapsed)
             os.Exit(0)
+		}
         }
-    }
 } 

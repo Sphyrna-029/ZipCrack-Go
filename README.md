@@ -16,6 +16,8 @@ C:\>go run ZipCrack.go -h
     ░                     ░                           ░
 
 Usage of C:\ZipCrack.exe:
+  -slack string
+        Slack web hook url. (Optional)
   -wordlist string
         Path to wordlist.
   -zip string

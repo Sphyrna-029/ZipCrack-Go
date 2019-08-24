@@ -1,5 +1,5 @@
 # ZipCrack-Go
-Decrypt AES265 encrypted zip files with a word list. 
+Decrypt AES256 encrypted zip files with a word list. 
 
 ```
 C:\>go run ZipCrack.go -h

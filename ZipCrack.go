@@ -68,7 +68,6 @@ func decrypt(r *zip.ReadCloser, password string, slackHook *string) {
         log.Printf("!============= Found password: %s in %s =============!", password, elapsed)
         message := fmt.Sprintf(":heavy_check_mark: Found password *%s* for *%s* in *%s* :heavy_check_mark:", password, f.Name, elapsed)
         if *slackHook != "" {
-            log.Printf("Sending solution to slack at %s", *slackHook)
             slack(*slackHook, message)
             if err != nil {
                 log.Fatal(err)

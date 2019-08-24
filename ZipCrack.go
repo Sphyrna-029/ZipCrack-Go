@@ -68,6 +68,7 @@ func decrypt(r *zip.ReadCloser, password string, slackHook *string) {
         log.Printf("!============= Found password: %s in %s =============!", password, elapsed)
         message := fmt.Sprintf(":heavy_check_mark: Found password *%s* for *%s* in *%s* :heavy_check_mark:", password, f.Name, elapsed)
         if *slackHook != "" {
+            log.Printf("Sending solution to slack.")
             slack(*slackHook, message)
             if err != nil {
                 log.Fatal(err)
@@ -120,9 +121,8 @@ func main() {
         go decrypt(r, fscanner.Text(), slackHook)
     }
     log.Printf("Password not found.")
-	
+    message := ":no_entry_sign: Password not found :no_entry_sign:"
     if *slackHook != "" {
-	message := ":no_entry_sign: Password not found :no_entry_sign:"
         slack(*slackHook, message)
         if err != nil {
             log.Fatal(err)
